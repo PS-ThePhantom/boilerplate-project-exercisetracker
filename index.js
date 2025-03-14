@@ -56,13 +56,13 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   let duration = req.body.duration;
   let date = req.body.date;
   
-  if(date === '') {
+  if(date === '' || date == undefined) {
     date = new Date();
   } else {
     date = new Date(date);
   }
 
-  User.findById(userId, (err, data) => {
+  User.findById(userId, (err, userData) => {
     if(err) {
       return console.error(err);
     }
@@ -73,7 +73,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         return console.error(err);
       }
 
-      res.json({username: data.username, description: data.description, duration: data.duration, _id: data.userId, date: data.date});
+      res.json({username: userData.username, _id: data.userId, description: data.description, duration: data.duration, date: data.date});
     });
   });
 });
@@ -98,12 +98,11 @@ app.get('/api/users/:_id/logs', (req, res) => {
   let to = req.query.to;
   let limit = req.query.limit;
   
-  User.findById(userId, (err, data) => {
+  User.findById(userId, (err, userData) => {
     if(err) {
       return console.error(err);
     }
-
-    let userName = data.username;
+    
     let count = 0;
     let log = [];
 
@@ -116,12 +115,13 @@ app.get('/api/users/:_id/logs', (req, res) => {
         if((from === undefined || exercise.date >= new Date(from)) && (to === undefined || exercise.date <= new Date(to))) {
           count++;
           if(limit === undefined || log.length < limit) {
-            log.push({description: exercise.description, duration: exercise.duration, date: exercise.date});
+            let date = new Date(exercise.date);
+            log.push({description: exercise.description, duration: exercise.duration, 'date': date.toDateString()});
           }
         }
       });
 
-      res.json({username: userName, _id: userId, count: count, log: log});
+      res.json({username: userData.username, _id: userId, count: count, log: log});
     });
   });
 });
